@@ -26,9 +26,9 @@ LPSTR Wstr2Str(LPWSTR lpwStr)
     return lpStr;
 }
 
-void PrintDebug(LPSTR function, LPSTR addtionInfo)
+void PrintDebug(LPSTR function, LPSTR additionInfo)
 {
-    std::cout << "Entering " << std::left << std::setw(25) << function << addtionInfo << "\n";
+    std::cout << "Entering " << std::left << std::setw(25) << function << additionInfo << "\n";
 }
 
 void PrintProxyInfo(WINHTTP_PROXY_INFO proxyInfo)
@@ -272,6 +272,29 @@ void CrackUrl(LPTSTR pszUrl, std::wstring* pwstrHostname, std::wstring* pwstrPat
     *pnPort = urlComp.nPort;
 }
 
+void RefreshProxy(HINTERNET hSession)
+{
+    std::string strConfirm = "";
+    while (strConfirm != "Y" && strConfirm != "N")
+    {
+        std::cout << "Refresh AutoProxy? Y/N ";
+        std::cin >> strConfirm;
+    }
+    if (strConfirm == "Y")
+    {
+        DWORD dwFlags = WINHTTP_RESET_ALL | WINHTTP_RESET_OUT_OF_PROC | WINHTTP_RESET_NOTIFY_NETWORK_CHANGED;
+        DWORD dwRes = WinHttpResetAutoProxy(hSession, dwFlags);
+        if (dwRes == ERROR_SUCCESS)
+        {
+            std::cout << "Refreshed AutoProxy\n\n";
+        }
+        else
+        {
+            std::cout << "Refresh Failed: " << dwRes << "\n\n";
+        }
+    }
+}
+
 void WebRequestDefaultProxy(LPTSTR pszUrl)
 {
     BOOL isHttps = FALSE;
@@ -436,6 +459,11 @@ void WebRequestProxyCheck(LPTSTR pszUrl)
     LPSTR lpStr;
 
     CrackUrl(pszUrl, &wstrHostname, &wstrPath, &nPort, &isHttps);
+    hSession = WinHttpOpen(L"WinHTTP Example/1.0",
+        WINHTTP_ACCESS_TYPE_NO_PROXY,
+        WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS, 0);
+    RefreshProxy(hSession);
 
     std::cout << "Detecting Auto Proxy...";
     if (WinHttpDetectAutoProxyConfigUrl(
@@ -468,10 +496,6 @@ void WebRequestProxyCheck(LPTSTR pszUrl)
     }
 
     std::cout << "Calling WinHttpGetProxyForUrl...";
-    hSession = WinHttpOpen(L"WinHTTP Example/1.0",
-        WINHTTP_ACCESS_TYPE_NO_PROXY,
-        WINHTTP_NO_PROXY_NAME,
-        WINHTTP_NO_PROXY_BYPASS, 0);
     ZeroMemory(&proxyInfo, sizeof(proxyInfo));
     ZeroMemory(&autoProxyOptions, sizeof(autoProxyOptions));
     
@@ -483,14 +507,12 @@ void WebRequestProxyCheck(LPTSTR pszUrl)
 
     if (WinHttpGetProxyForUrl(hSession, pszUrl, &autoProxyOptions, &proxyInfo))
     {
-        std::cout << "\rWinHttpGetProxyForUrl                                \n"
-            << std::left << std::setw(25) << "    Succeeded";
+        std::cout << "\rWinHttpGetProxyForUrl Succeeded                      \n";
         PrintProxyInfo(proxyInfo);
     }
     else
-        std::cout << "\rWinHttpGetProxyForUrl                                \n"
-            << std::left << std::setw(25) << "    Failed"
-            << std::left << std::setw(25) << "    Error Code: " << GetLastError();
+        std::cout << "\rWinHttpGetProxyForUrl Failed:                        \n"
+            << "    Error Code: " << GetLastError();
     
     if (IEProxyConfig.lpszAutoConfigUrl != NULL)
         GlobalFree(IEProxyConfig.lpszAutoConfigUrl);
