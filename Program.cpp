@@ -108,7 +108,13 @@ void WriteResponse(std::string strResponse)
     time_t now = time(0);
     localtime_s(&ltm, &now);
     std::stringstream ssOutFile;
-    ssOutFile << ".\\WinHttpResponse-" << ltm.tm_year << "-" << ltm.tm_mon << "-" << ltm.tm_mday << "_" << ltm.tm_hour << ltm.tm_min << ltm.tm_sec << ".txt";
+    ssOutFile << ".\\WinHttpResponse-" << (ltm.tm_year + 1900) << "-" 
+        << std::setw(2) << std::setfill('0') << std::right << ltm.tm_mon << "-"
+        << std::setw(2) << std::setfill('0') << std::right << ltm.tm_mday << "_"
+        << std::setw(2) << std::setfill('0') << std::right << ltm.tm_hour 
+        << std::setw(2) << std::setfill('0') << std::right << ltm.tm_min 
+        << std::setw(2) << std::setfill('0') << std::right << ltm.tm_sec
+        << ".txt";
 
     std::cout << "Writing Response to file: " << ssOutFile.str() << "\n";
     std::ofstream fsOutput(ssOutFile.str());
@@ -554,6 +560,8 @@ int main(int argc, char* argv[])
             << "    6: IE(WinINET) Proxy" << "\n"
             << "    7: Proxy Check" << "\n";
         std::cin >> AccessType;
+        std::cin.clear();
+        std::cin.ignore(1);
     }
 
     switch (AccessType)
