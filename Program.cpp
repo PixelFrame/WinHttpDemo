@@ -535,13 +535,19 @@ void WebRequestProxyCheck(LPTSTR pszUrl)
 
 int main(int argc, char* argv[])
 {
-    if (argc != 2)
+    if (argc > 2)
     {
-        std::cout << "Usage: " << argv[0] << " <URL>\n";
+        std::cout << "Usage: " << argv[0] << " [<URL>]\n";
         return 1;
     }
     
-    LPWSTR pwszUrl = Str2Wstr(argv[1]);
+    LPWSTR pwszUrl = NULL;
+    if (argc == 1)
+    {
+        wchar_t wstrDefaultUrl[] = L"http://www.microsoft.com";
+        pwszUrl = wstrDefaultUrl;
+    }
+    else pwszUrl = Str2Wstr(argv[1]);
     std::wstring wstrProxyServer;
     std::wstring wstrBypassList;
     std::wstring wstrConfigUrl;
@@ -549,7 +555,7 @@ int main(int argc, char* argv[])
     int AccessType = 0;
     while (AccessType > 7 || AccessType < 1)
     {
-        std::cout << "WinHTTP Proxy and Connection Test Demo Program\n"
+        std::cout << "WinHTTP Proxy and Connection Test Program\n"
             << "----------------------------------------------\n"
             << "Choose Proxy Type:\n"
             << "    1: Auto Proxy" << "\n"
@@ -609,7 +615,7 @@ int main(int argc, char* argv[])
         break;
     }
 
-    delete[] pwszUrl;
+    if (argc == 2) delete[] pwszUrl;
 
     return 0;
 }
